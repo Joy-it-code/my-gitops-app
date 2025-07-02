@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: guestbook
-        image: gcr.io/heptjonah/guestbook-ui:v1
+        image: nginx:latest
         ports:
         - containerPort: 80
 ---
