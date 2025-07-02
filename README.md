@@ -50,12 +50,10 @@ Ensure the following are installed and configured:
 ## Project Structure
 
 ```bash
-.
-├── guestbook/                    # Sample app directory
-│   ├── deployment.yaml           # Kubernetes Deployment
-│   └── service.yaml              # Kubernetes Service
-├── app.yaml                      # ArgoCD Application manifest
-└── README.md                     # Project documentation
+my-gitops-app
+├── guestbook/                                
+├── app.yaml                      
+└── README.md                     
 ```
 
 
@@ -77,17 +75,19 @@ cd my-gitops-app
 ```bash
 aws configure
 ```
+![](./img/1a.aws.configure.png)
 
 
 ### Make the Cluster:
 ```bash
-eksctl create cluster --name my-gitops-cluster --region us-east-1 --nodegroup-name my-nodes --nodes 2 --node-type t3.medium
+eksctl create cluster --name my-gitops-cluster --region us-east-1 --nodegroup-name my-nodes --nodes 2 --node-type t3.medium --managed
 ```
 
 ### Check the Cluster:
 ```bash
 kubectl get nodes
 ```
+![](./img/2a.get.nodes.png)
 
 
 ## Step 2: Install ArgoCD in EKS
@@ -101,13 +101,15 @@ kubectl create namespace argocd
 ```bash
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
-
+![](./img/2b.create.namespae.apply.png)
+![](./img/2c.apply.contd.png)
 
 ### Check if ArgoCD is Ready:
 ```bash
 kubectl get pods -n argocd
 kubectl get svc  -n argocd
 ```
+![](./img/2d.get.svc.png)
 
 
 ### Access ArgoCD Dashboard
@@ -171,7 +173,7 @@ spec:
     spec:
       containers:
       - name: guestbook
-        image: gcr.io/heptJonah/guestbook-ui:v1
+        image: gcr.io/heptjonah/guestbook-ui:v1
         ports:
         - containerPort: 80
 ---
@@ -195,6 +197,106 @@ spec:
 git init
 git add guestbook.yaml
 git commit -m "Add guestbook app"
+git branch -m master main
 git remote add origin https://github.com/your-username/my-gitops-app.git
 git push -u origin main
 ```
+
+
+## Step 4: Deploy a Simple App with ArgoCD
+
+- Create an ArgoCD Application:
+```bash
+touch app.yaml
+```
+
+### Paste:
+```bash
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: guestbook
+  namespace: argocd
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://github.com/your-username/my-gitops-app.git
+    path: .
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+
+### Apply the Application:
+```bash
+kubectl apply -f app.yaml -n argocd
+```
+
+### Check the Application
+```bash
+kubectl get pods -n default
+```
+![](./img/4a.guess.apply.png)
+![](./img/2e.get.pod.running.png)
+
+
+### Access the Deployed Application:
+```bash
+kubectl get svc
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+- Open browser and Monitor Synchronization: `http://localhost:8080`
+![](./img/4b.syned.page.png)
+
+
+## Test the Guestbook
+
+- Port Forward Again to Test Application Further
+
+- Connect to Guestbook  
+```bash
+kubectl port-forward svc/guestbook 8081:80 -n default
+```
+![](./img/4d.port.8081.png)
+
+- Open `http://localhost:8081` on browser
+![](./img/4c.nginx.page.png)
+
+
+## Clean Up
+```bash
+eksctl delete cluster --name my-gitops-cluster --region us-east-1
+```
+
+
+### Conclusion
+
+This project introduced GitOps using ArgoCD on AWS EKS. I set up a Kubernetes cluster, install ArgoCD, and deploy apps from Git in a fully automated, declarative way. This is a great starting point for building reliable and scalable DevOps workflows using modern cloud-native tools.
+
+
+## References
+
+- ArgoCD Documentation
+
+- Amazon EKS Guide
+
+- GitOps Principles by Weaveworks
+
+
+## Acknowledgments
+
+This project was inspired by the official ArgoCD example apps and GitOps practices in modern cloud-native development.
+
+
+### Author
+
+#### Name:  Joy Nwatuzor
+
+#### GitHub: Joy-it-code
