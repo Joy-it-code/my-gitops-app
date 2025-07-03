@@ -237,12 +237,13 @@ spec:
 ```bash
 kubectl apply -f app.yaml -n argocd
 ```
+![](./img/4a.guess.apply.png)
+
 
 ### Check the Application
 ```bash
 kubectl get pods -n default
 ```
-![](./img/4a.guess.apply.png)
 ![](./img/2e.get.pod.running.png)
 
 
@@ -262,12 +263,17 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 
 - Connect to Guestbook  
 ```bash
-kubectl port-forward svc/guestbook 8081:80 -n default
+kubectl get pods -n default
+kubectl port-forward pod/guestbook-58c6b47458-jvc2p -n default 8081:80
 ```
 ![](./img/4d.port.8081.png)
 
 - Open `http://localhost:8081` on browser
-![](./img/4c.nginx.page.png)
+![](./img/5a.healthy.guestbook.png)
+![](./img/5b.guestbook.page.png)
+![](./img/5c.guestbook.written.png)
+
+
 
 
 ## Clean Up
